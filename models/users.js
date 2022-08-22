@@ -1,5 +1,6 @@
 "use strict";
 const { Model, DataTypes } = require("sequelize");
+var bycrypt = require('bcryptjs');
 
 module.exports = (sequelize) => {
   class User extends Model {}
@@ -44,6 +45,12 @@ module.exports = (sequelize) => {
       password: {
         type: DataTypes.STRING,
         allowNull: false,
+        set (val) {
+          if (val) {
+            const hashedPassword = bycrypt.hashSync(val,10);
+            this.setDataValue("password", hashedPassword);
+          }
+        },
         validate: {
           notNull: {
             msg: "Please include a password",
