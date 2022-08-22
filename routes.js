@@ -3,6 +3,7 @@
 // load modules
 const express = require("express");
 const morgan = require("morgan");
+const { authenticateUser } = require("./middleware/auth-user");
 
 const router = express.Router();
 //const {model} = require("./models")
@@ -26,15 +27,14 @@ router.get(
   "/users",
   authenticateUser,
   asyncHandler(async (req, res) => {
-    const user = await req.currentUser;
-    res.json(user).status(200);
+    //const user = await req.currentUser;
+    res.status(200).json(req.currentUser);
   })
 );
 
 //User Post Route that creates a new user
 router.post(
   "/users",
-  authenticateUser,
   asyncHandler(async (req, res) => {
     try {
       await User.create(req.body);
@@ -63,7 +63,7 @@ router.get(
         model: User,
       },
     });
-    res.json(course).status(200);
+    res.json(courses).status(200);
   })
 );
 
@@ -83,6 +83,7 @@ router.get(
 //Courses POST route that will create a new course
 router.post(
   "/courses",
+  authenticateUser,
   asyncHandler(async (req, res, next) => {
     try {
       const courseId = await Course.create(req.body);
@@ -106,43 +107,58 @@ router.post(
 //Courses PUT route that updates corresponding course
 router.put(
   "/courses/:id",
+  authenticateUser,
   asyncHandler(async (req, res) => {
-    try {
-      const course = await Course.findByPk(req.params.id);
-      if (course) {
-        await course.update(req.body);
-        res.status(204).location("/").end();
+    const course = await Course.findByPk(req.params.id);
+    if (course) {
+      const user = req.currentUser;
+      if (user.id === course.userId) {
+        try {
+          await course.update(req.body);
+          res.status(204).end();
+        } catch (error) {
+          console.log("ERROR: ", error.name);
+          if (
+            error.name === "SequelizeValidationError" ||
+            error.name === "SequelizeUniqueConstraintError"
+          ) {
+            const errors = error.errors.map((err) => err.message);
+            res.status(400).json({ errors });
+          } else {
+            next(error);
+          }
+        }
       } else {
-        res.status(400);
-      }
-    } catch (error) {
-      console.log("ERROR: ", error.name);
-      if (
-        error.name === "SequelizeValidationError" ||
-        error.name === "SequelizeUniqueConstraintError"
-      ) {
-        const errors = error.errors.map((err) => err.message);
-        res.status(400).json({ errors });
-      } else {
-        throw error;
-      }
-    }
+				res.status(403).json({message:  "You are not allowed to update this course."});
+			}
+    } else {
+			res.status(404).json({message: "The course you are looking for doesn't exist."});
+		}
   })
 );
 
 //Courses DELETE route that will delete the corresponding course
 router.delete(
   "/courses/:id",
+  authenticateUser,
   asyncHandler(async (req, res) => {
-    try {
-      const course = await Course.findByPk(req.params.id);
-      await course.destroy();
-      res.status(204).end();
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
+		const course = await Course.findByPk(req.params.id);
+		if(course) {
+			const user = req.currentUser;
+			if(course.userId === user.id) {
+				try {
+					await course.destroy();
+					res.status(204).end();
+				} catch (err) {
+					res.status(500).json({ message: err.message });
+				}
+			} else {
+				res.status(403).json({message: "You are not allowed to delete this course"});
+			}
+		} else {
+			res.status(404).json({message: "The course you are looking for doesn't exist."});
+		}
   })
 );
-
 
 module.exports = router;
