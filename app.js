@@ -7,6 +7,8 @@ const morgan = require('morgan');
 // variable to enable global error logging
 const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
 
+const {sequelize} = require ("./models")
+
 // create the Express app
 const app = express();
 
@@ -57,8 +59,9 @@ console.log('Testing the connection to the database...');
 
     // Sync the models
     console.log('Synchronizing the models with the database...');
-    await sequelize.sync({ force: true });
+    await sequelize.sync({});
 
-  } catch(error) {
+  } catch(error) { 
+    console.log("error has occurred")
   }
 })();
