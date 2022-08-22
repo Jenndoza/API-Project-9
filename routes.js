@@ -56,9 +56,7 @@ router.post(
 );
 
 //Courses GET route that will return all courses inluding User associated w that course
-router.get(
-  "/courses",
-  asyncHandler(async (req, res, next) => {
+router.get("/courses", asyncHandler(async (req, res, next) => {
     const courses = await Course.findAll({
       indlude: {
         model: User,
@@ -78,6 +76,29 @@ router.get("/courses/:id", asyncHandler(async (req, res, next) => {
     res.json(course).status(200);
   })
 );
+
+//Courses POST route that will create a new course
+router.post("/courses", asyncHandler(async (req, res, next) => {
+    try {
+        const courseId = await Course.create (req.body);
+        res.status(201).location(`/courses/${courseId.id}`).end();
+    } catch (error) {
+        console.log("ERROR: ", error.name);
+  
+        if (
+          error.name === "SequelizeValidationError" ||
+          error.name === "SequelizeUniqueConstraintError"
+        ) {
+          const errors = error.errors.map((err) => err.message);
+          res.status(400).json({ errors });
+        } else {
+          throw error;
+        }
+      }
+    })
+  );
+
+  
 
 
 
