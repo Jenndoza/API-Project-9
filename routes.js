@@ -56,6 +56,17 @@ router.post(
 );
 
 //Courses GET route that will return all courses inluding User associated w that course
+router.get("/courses", asyncHandler(async (req, res, next) => {
+    const courses = await Course.findAll({
+      indlude: {
+        model: User,
+      },
+    });
+    res.json(course).status(200);
+  })
+);
+
+//Courses GET route that will return corresponding course w User associated w that course
 
 
 
