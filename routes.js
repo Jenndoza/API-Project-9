@@ -56,7 +56,9 @@ router.post(
 );
 
 //Courses GET route that will return all courses inluding User associated w that course
-router.get("/courses", asyncHandler(async (req, res, next) => {
+router.get(
+  "/courses",
+  asyncHandler(async (req, res, next) => {
     const courses = await Course.findAll({
       indlude: {
         model: User,
@@ -67,6 +69,15 @@ router.get("/courses", asyncHandler(async (req, res, next) => {
 );
 
 //Courses GET route that will return corresponding course w User associated w that course
+router.get("/courses/:id", asyncHandler(async (req, res, next) => {
+    const course = await Course.findByPk(req.params.id, {
+      include: {
+        model: User,
+      },
+    });
+    res.json(course).status(200);
+  })
+);
 
 
 
