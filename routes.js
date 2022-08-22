@@ -41,7 +41,6 @@ router.post(
       res.status(201).location("/").end();
     } catch (error) {
       console.log("ERROR: ", error.name);
-
       if (
         error.name === "SequelizeValidationError" ||
         error.name === "SequelizeUniqueConstraintError"
@@ -98,7 +97,32 @@ router.post("/courses", asyncHandler(async (req, res, next) => {
     })
   );
 
-  
+//Courses PUT route that updates corresponding course
+router.put("/courses/:id", asyncHandler(async (req, res,) => {  
+    try{
+        const course = await Course.findByPk(req.params.id);
+        if (course){
+            await course.update(req.body);
+            res.status(204).location("/").end();
+        } else {
+            res.status(400);
+        }
+    } catch (error) {
+        console.log("ERROR: ", error.name);
+        if (
+          error.name === "SequelizeValidationError" ||
+          error.name === "SequelizeUniqueConstraintError"
+        ) {
+          const errors = error.errors.map((err) => err.message);
+          res.status(400).json({ errors });
+        } else {
+          throw error;
+        }
+      }
+    })
+  );        
+
+//Courses DELETE ro  
 
 
 
