@@ -59,11 +59,16 @@ router.get(
   "/courses",
   asyncHandler(async (req, res, next) => {
     const courses = await Course.findAll({
-      indlude: {
+      include: {
         model: User,
+				as: "user"
       },
     });
-    res.json(courses).status(200);
+		if(courses) {
+			res.json(courses).status(200);
+		} else {
+			res.status(404).json({message: "The course you are looking for doesn't exist."})
+		}
   })
 );
 
@@ -72,11 +77,25 @@ router.get(
   "/courses/:id",
   asyncHandler(async (req, res, next) => {
     const course = await Course.findByPk(req.params.id, {
-      include: {
-        model: User,
-      },
+			attributes: [
+				"id", "title", "description", "estimatedTime", "materialsNeeded", "userId"
+			],
+      include: [
+				{
+        	model: User,
+					as: "user",
+					attributes: [
+						"id", "firstName", "lastName", "emailAddress"
+					]
+      	},
+			]
     });
-    res.json(course).status(200);
+
+		if(course) {
+			res.json(course).status(200);
+		} else {
+			res.status(404).json({message: "The course you are looking for doesn't exist."})
+		}
   })
 );
 
